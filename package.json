@@ -1,13 +1,14 @@
 {
-    "name": "web-detect",
+    "name": "WebDetect",
+    "description": "Web完整性检测",
     "dependences": {
         "sendmail": "~0.2.1"
     },
     "main": "index.js",
-    "engines": [
+    "engines": {
         "node": ">=0.10.0"
-    ],
+    },
     "scripts": {
-        "run": "npm install & node index.js 1> logs/out.log 2> err.log"
+        "run": "npm install & node index.js 1> logs/out.log 2> logs/err.log"
     }
 }

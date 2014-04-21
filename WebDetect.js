@@ -30,7 +30,8 @@ function WebDetect(config) {
     this.config = cover({
         email: {
             from: 'yansong@meituan.com',
-            to: 'mobile.fe@meituan.com'
+            to: 'mobile.fe@meituan.com',
+            type: 'text/html'
         },
         // 请求超时时间
         timeout: 4000,
@@ -48,12 +49,12 @@ WebDetect.CODE = CODE;
 
 cover(WebDetect.prototype, {
     error: function(code, url, msg) {
-        console.error(util.format("[ERROR]:[%j] URL is: %s . Error message is: %s", new Date().toJSON(), url, msg));
+        console.error(util.format("[ERROR]:[%s] URL is: %s . Error message is: %s", new Date().toJSON(), url, msg));
         this.emit('error', url, code, msg);
     },
 
     log: function(msg) {
-        console.info(util.format('[INFO]:[%j] %s.', new Date().toJSON(), msg));
+        console.info(util.format('[INFO]:[%s] %s.', new Date().toJSON(), msg));
     },
 
     // 是否考虑直接使用request库呢？
@@ -112,14 +113,14 @@ cover(WebDetect.prototype, {
 
         // default error
         this.on('error', function(url, code, msg){
-            (Error[url] = Error[url] || []).push(msg);
+            (Error[url] = Error[url] || []).push(util.format('[%j]: Count[%s], Error message: %s', new Date(), Error[url].length, msg));
             // count 5
             if (Error[url] && Error[url].length > 4) {
                 _this.sendEmail(url, Error[url].join('\n<br/>'));
-                _this.emit('end', url);
             } else {
-                _this.request(url);
+                _this.config.urls.push(url);
             }
+            _this.emit('end', url);
 //            switch (code) {
 //                case CODE.STATUS_CODE_ERROR:
 //                case CODE.PAGE_ERROR:
@@ -134,7 +135,7 @@ cover(WebDetect.prototype, {
     sendEmail: function(url, msg) {
         sendemail(cover(this.config.email, {
             subject: '[ERROR DETECT] ' + url,
-            content: '' + msg
+            content: '<p>' + msg + '</p>'
         }), function(err, replay) {
             if (err) {
                 console.error(err.stack);
