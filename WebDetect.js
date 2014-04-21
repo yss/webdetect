@@ -1,8 +1,8 @@
-#!/usr/bin node
-
 var http = require('http'),
     util = require('util'),
     events = require('events');
+
+var sendemail = require('sendmail')();
 
 var CODE = {
     STATUS_CODE_ERROR: 1,
@@ -10,9 +10,6 @@ var CODE = {
     REQUEST_TIMEOUT: 3,
     PAGE_ERROR: 4
 };
-var urls = [
-    'http://m.maoyan.com'
-];
 
 function cover(o, s) {
     if ('object' === typeof o && 'object' === typeof s) {
@@ -31,7 +28,14 @@ function WebDetect(config) {
     events.EventEmitter.call(this);
 
     this.config = cover({
-        timeout: 4000
+        email: {
+            from: 'yansong@meituan.com',
+            to: 'mobile.fe@meituan.com'
+        },
+        // 请求超时时间
+        timeout: 4000,
+        // 一次性最多请求次数
+        maxRequest: 10
     }, config);
 
     this.init();
@@ -45,7 +49,7 @@ WebDetect.CODE = CODE;
 cover(WebDetect.prototype, {
     error: function(code, url, msg) {
         console.error(util.format("[ERROR]:[%j] URL is: %s . Error message is: %s", new Date().toJSON(), url, msg));
-        this.emit('error', url, code);
+        this.emit('error', url, code, msg);
     },
 
     log: function(msg) {
@@ -76,7 +80,9 @@ cover(WebDetect.prototype, {
                 });
             }).on('error', function(e) {
                 _this.error(CODE.REQUEST_ERROR, url, e.message);
-            }).setTimeout(_this.config.timeout, function() {
+            });
+
+            req.setTimeout(_this.config.timeout, function() {
                 req.abort();
                 _this.error(CODE.REQUEST_TIMEOUT, url, 'Time out.');
             });
@@ -87,8 +93,9 @@ cover(WebDetect.prototype, {
         var _this = this,
             i = 0,
             config = _this.config,
+            maxRequest = config.maxRequest,
             url;
-        while(i < 10 && (url = config.urls.shift())) {
+        while(i < maxRequest && (url = config.urls.shift())) {
             _this.request(url);
             i++;
         }
@@ -99,9 +106,44 @@ cover(WebDetect.prototype, {
         });
     },
 
-    init: function() {
+    handler: function() {
+        var _this = this,
+            Error = {};
+
         // default error
-        this.on('error', function(){});
+        this.on('error', function(url, code, msg){
+            (Error[url] = Error[url] || []).push(msg);
+            // count 5
+            if (Error[url] && Error[url].length > 4) {
+                _this.sendEmail(url, Error[url].join('\n<br/>'));
+                _this.emit('end', url);
+            } else {
+                _this.request(url);
+            }
+//            switch (code) {
+//                case CODE.STATUS_CODE_ERROR:
+//                case CODE.PAGE_ERROR:
+//
+//                case CODE.REQUEST_ERROR:
+//
+//                case CODE.REQUEST_TIMEOUT:
+//            }
+        });
+    },
+
+    sendEmail: function(url, msg) {
+        sendemail(cover(this.config.email, {
+            subject: '[ERROR DETECT] ' + url,
+            content: '' + msg
+        }), function(err, replay) {
+            if (err) {
+                console.error(err.stack);
+            }
+        });
+    },
+
+    init: function() {
+        this.handler();
         this.detect();
     }
 });
