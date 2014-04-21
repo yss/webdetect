@@ -3,5 +3,8 @@
     "dependences": {
         "sendmail": "~0.2.1"
     },
-    "main": "index.js"
+    "main": "index.js",
+    "engines": [
+        "node": ">=0.10.0"
+    ],
 }
