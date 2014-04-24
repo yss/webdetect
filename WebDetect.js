@@ -114,7 +114,7 @@ cover(WebDetect.prototype, {
             Error = {};
 
         // default error
-        this.on('error', function(url, code, msg){
+        this.on('error', function(code, url, msg){
 
             console.error(util.format("[ERROR]:[%s] URL is: %s . Error message is: %s", new Date().toJSON(), url, msg));
 

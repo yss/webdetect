@@ -9,6 +9,6 @@
         "node": ">=0.10.0"
     },
     "scripts": {
-        "run": "npm install & node index.js 1> logs/out.log 2> logs/err.log"
+        "detect": "npm install & node index.js 1> logs/out.log 2> logs/err.log"
     }
 }
