@@ -14,4 +14,4 @@ web完整性检测。
 
 ## 需求文档
 
-<http://wiki.sankuai.com/pages/viewpage.action?pageId=85045278>
+<./PLAN.md>
