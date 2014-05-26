@@ -1,5 +1,6 @@
 {
     "name": "WebDetect",
+    "version": "1.0",
     "description": "Web完整性检测",
     "dependences": {
         "sendmail": "~0.2.1"
